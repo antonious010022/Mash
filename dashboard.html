@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نظام المشرقي لإدارة الطلبات - الواجهة الموحدة الشاملة</title>
+    <style>
+        :root { 
+            --primary: #1e3a8a; --secondary: #0d9488; --bg: #f8fafc; 
+            --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; 
+            --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
+            --purple: #8b5cf6; --info: #0284c7;
+            --stale-bg: #fef2f2; --stale-border: #fca5a5;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; }
+        
+        header { 
+            background: linear-gradient(135deg, var(--primary), #1e40af); 
+            color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .philosophy-badge { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        
+        .main-container { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; }
+        
+        .stages-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; grid-column: 1 / -1; }
+        .stage-tab { background: #cbd5e1; border: none; padding: 18px; border-radius: 8px; text-align: center; font-weight: bold; color: #334155; cursor: pointer; position: relative; font-size: 15px; transition: all 0.3s; }
+        .stage-tab.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(30,58,138,0.3); }
+        .stage-tab .badge { position: absolute; top: -8px; left: -8px; background: var(--danger); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .stage-tab.active .badge { background: white; color: var(--primary); }
+
+        .content-area { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .content-header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        
+        .order-table { width: 100%; border-collapse: collapse; text-align: right; }
+        .order-table th { background: #f1f5f9; padding: 14px; color: #475569; font-weight: 700; border-bottom: 2px solid var(--border); font-size: 14px; }
+        .order-table td { padding: 16px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        
+        .stale-order-row { background-color: var(--stale-bg) !important; animation: pulseStale 2s infinite; border: 2px solid var(--stale-border); }
+        @keyframes pulseStale {
+            0% { background-color: #fef2f2; } 50% { background-color: #fee2e2; } 100% { background-color: #fef2f2; }
+        }
+        
+        .type-badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .type-badge.light { background: #e0f2fe; color: #0369a1; }
+        .type-badge.heavy { background: #fef3c7; color: #b45309; }
+        .type-badge.stale-badge { background: var(--danger); color: white; }
+        
+        .inv-badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .inv-badge.available { background: #d1fae5; color: #065f46; }
+        .inv-badge.missing { background: #fee2e2; color: #991b1b; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-confirmed { background: #d1fae5; color: #065f46; }
+        .status-shipping { background: #e0f2fe; color: #0369a1; }
+        .status-returned { background: #fee2e2; color: #991b1b; }
+        .status-delivered { background: #d1fae5; color: #065f46; }
+
+        .action-btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: background 0.2s; }
+        .action-btn:hover { opacity: 0.9; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.6); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; width: 680px; max-width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { margin-bottom: 20px; color: var(--primary); font-size: 18px; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .info-box { background: #f8fafc; border-right: 4px solid var(--primary); padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 700; color: #334155; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background-color: #f8fafc; }
+        
+        .gate-box { background: #fff7ed; border: 1px solid #fed7aa; padding: 18px; border-radius: 8px; margin-top: 15px; border-right: 4px solid var(--warning); }
+        .gate-box .statement { background: white; padding: 15px; border-radius: 8px; margin: 12px 0; font-size: 13.5px; color: #431407; line-height: 1.6; border: 1px dashed #fdba74; }
+        .gate-box .statement ul { padding-right: 20px; margin-top: 8px; }
+        
+        .factory-gates { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 18px; border-radius: 8px; margin-top: 15px; border-right: 4px solid var(--success); display: none; }
+        
+        .modal-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 25px; border-top: 1px solid var(--border); padding-top: 15px; }
+        .btn { padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 12.5px; font-weight: bold; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
+        .btn-secondary { background: #e2e8f0; color: #475569; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-purple { background: var(--purple); color: white; }
+        .btn-info { background: var(--info); color: white; }
+        
+        .sidebar-panel { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .sidebar-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .factory-list-item { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; font-size: 13px; line-height: 1.5; position: relative; }
+        .side-badge { display: inline-block; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-top: 5px; }
+        
+        /* كروت الأداء والإحصائيات الخاصة ببوسطة */
+        .bosta-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .stat-card:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .stat-card h4 { font-size: 12px; color: #166534; margin-bottom: 4px; }
+        .stat-card p { font-size: 20px; font-weight: bold; color: #14532d; }
+        .stat-card.sent { background: #e0f2fe; border-color: #bae6fd; }
+        .stat-card.sent h4, .stat-card.sent p { color: #0369a1; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h2>شركة المشرقي للسيراميك والأدوات الصحية</h2>
+            <p style="font-size: 13px; opacity: 0.9; margin-top: 4px;">النظام الذكي: واجهة فحص موحدة وصارمة لكافة الطلبات لضمان دقة الجودة والمخزون</p>
+        </div>
+        <div class="philosophy-badge">محرك التوجيه الموحد مفعّل ⚙️</div>
+    </header>
+
+    <div class="main-container">
+        
+        <div>
+            <div class="stages-bar">
+                <button class="stage-tab active" id="tab-1" onclick="switchStage(2)">بوابة خدمة العملاء والاتصال <span class="badge" id="count-2">0</span></button>
+                <button class="stage-tab" id="tab-2" onclick="switchStage(3)">صفحة شحن أوردرات بوسطة (الشحن الخفيف الآلي) <span class="badge" id="count-light">0</span></button>
+                <button class="stage-tab" id="tab-3" onclick="switchStage(4)">شحن نقل المشرقي [ثقيل] <span class="badge" id="count-heavy">0</span></button>
+            </div>
+
+            <div class="content-area">
+                <div class="content-header">
+                    <h3 id="stage-title">الخطوة الحالية</h3>
+                    <span style="font-size: 12px; color: #64748b;">*أنظمة الجدولة والفرز التلقائي الموحد مفعّلة</span>
+                </div>
+                
+                <div id="table-wrapper"></div>
+            </div>
+        </div>
+
+        <div>
+            <div id="crm-sidebar-group">
+                <div class="sidebar-panel" style="margin-bottom: 20px; border-top: 4px solid var(--danger); background-color: #fff5f5;">
+                    <div class="sidebar-title" style="color: var(--danger);">🚨 أولوية قصوى: شحن خفيف راكد (+3 أيام)</div>
+                    <div id="stale-orders-sidebar-list" style="color: #64748b; font-size: 13px;">لا توجد طلبات متأخرة أو راكدة حالياً.</div>
+                </div>
+
+                <div class="sidebar-panel" style="margin-bottom: 20px; border-top: 4px solid var(--info);">
+                    <div class="sidebar-title">⏳ في انتظار رد العميل (مهلة 24 ساعة)</div>
+                    <div id="waiting-reply-orders-list" style="color: #64748b; font-size: 13px;">لا توجد طلبات معلقة لرد العميل.</div>
+                </div>
+
+                <div class="sidebar-panel" style="margin-bottom: 20px; border-top: 4px solid var(--warning);">
+                    <div class="sidebar-title">📞 قائمة (لم يرد) - معلق للتواصل</div>
+                    <div id="noreply-orders-list" style="color: #64748b; font-size: 13px;">لا توجد طلبات معلقة حالياً.</div>
+                </div>
+
+                <div class="sidebar-panel" style="margin-bottom: 20px; border-top: 4px solid var(--purple);">
+                    <div class="sidebar-title">💳 في انتظار دفع العميل (جدية التعاقد)</div>
+                    <div id="waiting-deposit-orders-list" style="color: #64748b; font-size: 13px;">لا توجد طلبات معلقة حالياً.</div>
+                </div>
+
+                <div class="sidebar-panel" style="margin-bottom: 20px; border-top: 4px solid var(--success);">
+                    <div class="sidebar-title">🏭 قائمة طلبات المصنع القائمة</div>
+                    <div id="factory-orders-list" style="color: #64748b; font-size: 13px;">لا توجد طلبات قيد التصنيع حالياً.</div>
+                </div>
+                
+                <div class="sidebar-panel" style="border-top: 4px solid var(--danger); margin-bottom: 20px;">
+                    <div class="sidebar-title">📂 أرشيف الطلبات الملغاة</div>
+                    <div id="cancelled-orders-list" style="color: #64748b; font-size: 13px;">لا توجد طلبات ملغاة.</div>
+                </div>
+            </div>
+
+            <div id="bosta-sidebar-group" style="display: none;">
+                <div class="sidebar-panel" style="margin-bottom: 20px; border-top: 4px solid var(--success);">
+                    <div class="sidebar-title">📈 مؤشرات أداء تسليمات بوسطة</div>
+                    <div class="bosta-stats-grid" id="bosta-stats-grid">
+                        <!-- Stats will be populated by JS -->
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:8px;">*اضغط على أي مؤشر لعرض تفاصيل الفواتير الخاصة به</div>
+                    <div id="bosta-stats-details" style="margin-top: 12px;"></div>
+                </div>
+
+                <div class="sidebar-panel" style="border-top: 4px solid var(--info); background-color: #f7fcff;">
+                    <div class="sidebar-title" style="color: var(--info);">🚚 قيد التوصيل مع بوسطة (متزامن تلقائيًا API)</div>
+                    <div id="bosta-intransit-box" style="color:#64748b; font-size:13px;">لا توجد شحنات قيد التوصيل حالياً.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal" id="gateModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeaderTitle">⚠️ بوابة معالجة وتوجيه طلبات المشرقي (صارم)</div>
+            
+            <div class="info-box" id="modalOrderSummary"></div>
+
+            <div class="form-group" id="addressInputBox">
+                <label>تأكيد العنوان التفصيلي للعميل (إلزامي):</label>
+                <input type="text" class="form-control" id="customerAddress" placeholder="اكتب العنوان المؤكد بالكامل من مكالمة العميل...">
+            </div>
+
+            <div class="form-group" id="priceInputBox">
+                <label>إجمالي قيمة الفاتورة الحالي (جنيه):</label>
+                <input type="number" class="form-control" id="orderTotalPriceInput" value="0">
+            </div>
+
+            <div class="form-group" id="shortageSolutionsBox">
+                <label style="color:var(--primary)">📋 موقف معالجة المخزون وتأكيد المسار اللوجستي المتفق عليه:</label>
+                <select class="form-control" id="selectedSolution" onchange="handleSolutionChange()" style="border-color: var(--primary); background: #f8fafc; font-weight: bold;">
+                    <option value="">-- اختر طريقة تأكيد وتوجيه الطلب المتفق عليها مع العميل --</option>
+                    <option value="forced_ok">💡 الحل (أ): تأكيد فوري (البضاعة حاضرة يدوياً ومطابقة للمخزن)</option>
+                    <option value="replaced_ok">🔄 الحل (ب): البديل المتاح (تم تبديل الصنف بصنف راكد/متوفر بموافقة العميل)</option>
+                    <option value="factory_order">🏭 الحل (ج): تحويل لطلب مصنع (بانيو/جاكوزي خاص أو انتظار تصنيع)</option>
+                </select>
+            </div>
+
+            <div class="factory-gates" id="factoryGatesBox">
+                <p style="font-weight:bold; color:var(--success); margin-bottom:10px;">📋 قيود المواصفات الفنية للمصنع الفورية:</p>
+                <div class="form-group">
+                    <label>1. التفاصيل الفنية والتصنيع:</label>
+                    <textarea class="form-control" id="factorySpecs" rows="2" placeholder="مثال: صرف جهة القدم..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>2. تاريخ التسليم المتوقع المقدر للمصنع:</label>
+                    <input type="text" class="form-control" id="factoryDate" placeholder="مثال: جاهز خلال 14 يوم عمل...">
+                </div>
+            </div>
+
+            <div class="gate-box" id="gateBox">
+                <p><strong>🔒 يجب مراجعة وتثبيت البنود التالية لمنع الأخطاء اللوجستية:</strong></p>
+                <div class="statement">
+                    <ul>
+                        <li><b>📍 تأكيد وتدقيق العنوان بالتفصيل</b></li>
+                        <li><b>⏰ الاتفاق على توقيت التسليم المقدر</b></li>
+                        <li><b>🔒 التنبيه بسياسة الإغلاق الفوري للطلب</b></li>
+                        <li><b>💳 تحديد وتجهيز آلية السداد (كاش / فيزا)</b></li>
+                    </ul>
+                </div>
+                <label style="font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="employeePledge" onchange="validateGateForm()" style="width:18px; height:18px;"> 
+                    أقر أنا الموظف بقراءة الإقرار وإبلاغ العميل بكافة البنود أعلاه.
+                </label>
+            </div>
+
+            <div class="form-group" id="cancelReasonBox" style="display:none;">
+                <label style="color:var(--danger)">سبب إلغاء الطلب الإلزامي:</label>
+                <textarea class="form-control" id="cancelReason" placeholder="اكتب بالتفصيل سبب إلغاء العميل للأوردر..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">إغلاق الشاشة</button>
+                <button class="btn btn-info" id="waitingReplyTriggerBtn" onclick="executeWaitingReply()">في انتظار رد العميل ⏳</button>
+                <button class="btn btn-warning" id="noReplyTriggerBtn" onclick="executeNoReply()">لم يرد العميل 📞❌</button>
+                <button class="btn btn-purple" id="waitingDepositTriggerBtn" onclick="executeWaitingDeposit()">في انتظار جدية التعاقد 💳</button>
+                <button class="btn btn-danger" id="cancelTriggerBtn" onclick="setupCancelMode()">إلغاء الطلب تماماً</button>
+                <button class="btn btn-primary" id="submitGateBtn" onclick="executeGateAction()" disabled>حفظ وتوجيه الطلب آلياً</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // قاعدة البيانات الافتراضية مع إضافة الأسعار والحالات وتواريخ النقل المباشر لسيستم بوسطة
+        let databaseOrders = [
+            { id: 918703, customer: "antonious", phone: "201150599155", address: "مركز قوص قرية المقارين", city: "Qena", items: "محبس زاوية ماجيك بلازا (1 قطعة)", weight: 0.5, price: 400.00, status: "Confirmed", comment: "تأكيد مطابق للمخزن الموحد", step: 2, timestamp: new Date(), waybill: null }, 
+            { id: 918695, customer: "Amany Elhenawy", phone: "201069551758", address: "العبور بجوار مسجد النور", city: "Qalyubia", items: "بانيو جاكوزي 170 × 80 (1 قطعة)", weight: 45, price: 12500.00, status: "Confirmed", comment: "", step: 2, timestamp: new Date(), waybill: null }, 
+            { id: 918696, customer: "Mohammed Ramadan", phone: "201553190025", address: "5 امتداد 15 مايو", city: "Cairo", items: "خلاط حوض جروهي (1 قطعة)", weight: 3, price: 3938.00, status: "Confirmed", comment: "", step: 2, timestamp: new Date(), waybill: null },
+            
+            // محاكاة أوردرات داخل صفحة بوسطة جاهزة (خطوة 3) 
+            { id: 918647, customer: "antonious", phone: "2012444555", address: "ش الجمهورية", city: "Sohag", items: "مواسير خفيفة", weight: 2, price: 400.00, status: "Confirmed", comment: "محول آلي", step: 3, timestamp: new Date('2026-07-01'), waybill: null },
+            { id: 918649, customer: "antonious", phone: "2012777888", address: "مدينة نصر", city: "Cairo", items: "محبس دفن", weight: 1.5, price: 3938.00, status: "Sent to Shipping", comment: "خرج مع مندوب بوسطة", step: 3, timestamp: new Date('2026-07-01'), waybill: "BSTA-918649-001", sentAt: new Date('2026-07-01') },
+            
+            // محاكاة أوردرات مرتجعة ومسلمة 
+            { id: 918610, customer: "مينا مكرم", phone: "2010111222", address: "مصر الجديدة", city: "Cairo", items: "شطاف صحي", weight: 1, price: 650.00, status: "Delivered", comment: "تم التسليم بنجاح للعميل", step: 3, timestamp: new Date('2026-06-28'), waybill: "BSTA-918610-002", deliveredAt: new Date('2026-06-29') },
+            { id: 918620, customer: "مروة حسن", phone: "2010333444", address: "الهرم", city: "Giza", items: "اكسسوار حمام", weight: 0.8, price: 820.00, status: "Returned", comment: "العميل مغلق", returnReason: "تم إرسال واتساب: العميل مسافر وسيعود بعد أسبوع", step: 3, timestamp: new Date('2026-06-25'), waybill: "BSTA-918620-003", returnedAt: new Date('2026-06-27') },
+
+            // أوردر راكد خدمة عملاء 
+            { id: 918500, customer: "عصام رأفت (الإسكندرية)", phone: "201022334455", address: "سموحة ش الفردوس", city: "Alex", items: "شطاف خارجي ايديال", weight: 1.2, price: 350.00, status: "Confirmed", comment: "", step: 2, timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), waybill: null }
+        ];
+
+        let currentViewStage = 2; 
+        let activeOrderId = null;
+        let isCancelMode = false;
+        let activeStatsFilter = null; // null, 'sent', 'delivered', 'returned'
+        let cachedListsHTML = { sent: "", delivered: "", returned: "" };
+
+        // دالة الأتمتة المحدثة
+        function runSystemAutomation() {
+            let now = new Date();
+            let staleListHTML = "";
+            let hasStale = false;
+
+            let bostaReturnsHTML = "";
+            let bostaSentHTML = "";
+            let bostaDeliveredHTML = "";
+
+            // حسابات أداء بوسطة
+            let sentCount = 0;       // حاليًا بحالة "تم الارسال للشحن"
+            let deliveredCount = 0;
+            let returnedCount = 0;
+            let inTransitCount = 0;  // أرسلت ولسه ماعدتش يومين (سليمة عند بوسطة)
+
+            databaseOrders.forEach(order => {
+                order.shippingPath = order.weight < 20 ? "📦 خفيف (بوسطة)" : "🚛 ثقيل (نقل المشرقي)";
+                order.shippingClass = order.weight < 20 ? "light" : "heavy";
+
+                let diffTime = Math.abs(now - order.timestamp);
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // Stale orders - خدمة عملاء لسه ماتحلتش (+3 أيام)
+                let isCrmStale = (order.step === 2 && order.weight < 20 && diffDays >= 3);
+
+                // Stale orders - شحنة اتبعتت لبوسطة ومحدش تابعها (+2 يوم عمل)
+                let isShippingStale = false;
+                let shippingStaleDays = 0;
+                if (order.step === 3 && order.status === "Sent to Shipping" && order.sentAt) {
+                    let sentDiffTime = Math.abs(now - order.sentAt);
+                    shippingStaleDays = Math.ceil(sentDiffTime / (1000 * 60 * 60 * 24));
+                    isShippingStale = shippingStaleDays >= 2;
+                }
+
+                order.isStale = isCrmStale || isShippingStale;
+
+                if (isCrmStale) {
+                    hasStale = true;
+                    staleListHTML += `
+                        <div class="factory-list-item" style="border-right: 4px solid var(--danger); background:#fff0f0;">
+                            <b>فاتورة #${order.id} - ${order.customer}</b><br>
+                            📱 هاتف: ${order.phone}<br>
+                            <span class="side-badge" style="background:var(--danger); color:white;">⚠️ معلق بدون إجراء فعلي منذ ${diffDays} أيام</span>
+                        </div>`;
+                }
+
+                if (isShippingStale) {
+                    hasStale = true;
+                    staleListHTML += `
+                        <div class="factory-list-item" style="border-right: 4px solid var(--danger); background:#fff0f0;">
+                            <b>فاتورة #${order.id} - ${order.customer}</b><br>
+                            📮 البوليصة: ${order.waybill || '—'}<br>
+                            <span class="side-badge" style="background:var(--danger); color:white;">⚠️ شحنة راكدة عند بوسطة منذ ${shippingStaleDays} يوم - يُحتمل وجود مشكلة داخلية أو طلب من العميل لم يُنفَّذ</span>
+                        </div>`;
+                }
+
+                // Bosta calculations - step 3 فقط
+                if (order.step === 3) {
+                    if (order.status === "Sent to Shipping") {
+                        sentCount++;
+                        if (!isShippingStale) inTransitCount++;
+
+                        bostaSentHTML += `
+                            <div class="factory-list-item" style="border-right: 4px solid var(--info); background:#f7fcff;">
+                                <b>فاتورة #${order.id} - ${order.customer}</b><br>
+                                <span style="font-size:11px; color:#0369a1;">📮 البوليصة: ${order.waybill || '—'}</span><br>
+                                <span style="font-size:11px; color:#64748b;">💰 ${order.price.toLocaleString('en-US', {minimumFractionDigits: 2})} جنيه</span><br>
+                                <span style="font-size:11px; color:#64748b;">📝 ${order.comment || 'لا يوجد تعليق'}</span>
+                                <div style="margin-top:8px; display:flex; gap:4px;">
+                                    <button class="btn btn-primary" style="padding:5px 8px; font-size:11px; background:var(--success);" onclick="markDelivered(${order.id})">✅ تم التسليم</button>
+                                    <button class="btn btn-danger" style="padding:5px 8px; font-size:11px;" onclick="markReturned(${order.id})">🔁 مرتجع</button>
+                                </div>
+                            </div>`;
+                    } else if (order.status === "Delivered") {
+                        deliveredCount++;
+                        let deliveredDate = order.deliveredAt ? order.deliveredAt.toISOString().split('T')[0] : '—';
+                        bostaDeliveredHTML += `
+                            <div class="factory-list-item" style="border-right: 4px solid var(--success); background:#f7fef9;">
+                                <b>فاتورة #${order.id} - ${order.customer}</b><br>
+                                <span style="font-size:11px; color:#166534;">✅ تم التسليم بتاريخ: ${deliveredDate}</span><br>
+                                <span style="font-size:11px; color:#64748b;">💰 ${order.price.toLocaleString('en-US', {minimumFractionDigits: 2})} جنيه</span>
+                            </div>`;
+                    } else if (order.status === "Returned") {
+                        returnedCount++;
+                        let reasonText = order.returnReason ? order.returnReason : "لم يسجل سبب حتى الآن";
+                        bostaReturnsHTML += `
+                            <div class="factory-list-item" style="border-right: 4px solid var(--danger); background:#fffefc;">
+                                <b>فاتورة #${order.id} - ${order.customer}</b><br>
+                                <span style="font-size:11px; color:#ef4444;">📋 سبب الاسترجاع: ${reasonText}</span>
+                                <div style="margin-top:8px; display:flex; gap:4px;">
+                                    <input type="text" id="return-input-${order.id}" class="form-control" style="padding:4px; font-size:11px;" placeholder="تعديل سبب المرتجع...">
+                                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="saveReturnReason(${order.id})">حفظ</button>
+                                </div>
+                            </div>`;
+                    }
+                }
+
+                if (order.stockQty === undefined) order.stockQty = 10;
+                if (order.stockQty >= 5) {
+                    order.inventoryStatus = "✓ متوفر بالسيستم"; order.inventoryClass = "available";
+                } else {
+                    order.inventoryStatus = "⚠️ عجز بالسيستم"; order.inventoryClass = "missing";
+                }
+            });
+
+            // Update stale (خدمة العملاء + الشحن الراكد)
+            const staleContainer = document.getElementById('stale-orders-sidebar-list');
+            if (hasStale) staleContainer.innerHTML = staleListHTML;
+            else staleContainer.innerHTML = "لا توجد طلبات متأخرة أو راكدة حالياً.";
+
+            // Cache lists for the on-demand stats drill-down panel
+            cachedListsHTML.sent = bostaSentHTML || "لا توجد شحنات مرسلة حالياً.";
+            cachedListsHTML.delivered = bostaDeliveredHTML || "لا توجد شحنات مسلمة حالياً.";
+            cachedListsHTML.returned = bostaReturnsHTML || "لا توجد شحنات مرتجعة حالياً.";
+
+            // Update in-transit persistent box
+            const intransitBox = document.getElementById('bosta-intransit-box');
+            if (intransitBox) {
+                intransitBox.innerHTML = inTransitCount > 0 ?
+                    `🔄 يوجد حاليًا <b>${inTransitCount}</b> أوردر في الطريق للعميل (بيانات متزامنة تلقائيًا مع API بوسطة).` :
+                    "لا توجد شحنات قيد التوصيل حالياً.";
+            }
+
+            // Populate Bosta stats grid + refresh the open detail panel (if any)
+            updateBostaStats(sentCount, deliveredCount, returnedCount);
+            renderStatsDetailsPanel();
+        }
+
+        function updateBostaStats(sentCount, deliveredCount, returnedCount) {
+            const grid = document.getElementById('bosta-stats-grid');
+            let processedTotal = sentCount + deliveredCount + returnedCount;
+            let successRate = processedTotal > 0 ? Math.round((deliveredCount / processedTotal) * 100) : 0;
+
+            function cardStyle(key) {
+                return activeStatsFilter === key ? "outline: 2px solid var(--primary);" : "";
+            }
+
+            grid.innerHTML = `
+                <div class="stat-card sent" style="${cardStyle('sent')}" onclick="toggleStatsFilter('sent')">
+                    <h4>تم ارسالها للشحن</h4>
+                    <p>${sentCount}</p>
+                </div>
+                <div class="stat-card" style="${cardStyle('delivered')}" onclick="toggleStatsFilter('delivered')">
+                    <h4>تم تسليمها</h4>
+                    <p>${deliveredCount}</p>
+                </div>
+                <div class="stat-card" style="background:#fff5f5; border-color:#fca5a5; ${cardStyle('returned')}" onclick="toggleStatsFilter('returned')">
+                    <h4 style="color:#991b1b;">المرتجعات</h4>
+                    <p style="color:#991b1b;">${returnedCount}</p>
+                </div>
+                <div class="stat-card" style="background:#e0f2fe; border-color:#bae6fd; grid-column: span 3; cursor:default;">
+                    <h4 style="color:#0369a1;">نسبة نجاح التسليم</h4>
+                    <p style="color:#0369a1; font-size: 24px;">${successRate}%</p>
+                </div>
+            `;
+        }
+
+        function toggleStatsFilter(filter) {
+            activeStatsFilter = (activeStatsFilter === filter) ? null : filter;
+            refreshUI();
+        }
+
+        function renderStatsDetailsPanel() {
+            const panel = document.getElementById('bosta-stats-details');
+            if (!panel) return;
+
+            if (!activeStatsFilter) { panel.innerHTML = ""; return; }
+
+            let titleMap = {
+                sent: "📮 الفواتير المرسلة للشحن حاليًا",
+                delivered: "✅ الفواتير المسلمة",
+                returned: "📦 الفواتير المرتجعة"
+            };
+
+            panel.innerHTML = `
+                <div style="border-top: 1px dashed var(--border); padding-top: 10px;">
+                    <div style="font-weight:bold; font-size:13px; color:var(--primary); margin-bottom:8px;">${titleMap[activeStatsFilter]}</div>
+                    ${cachedListsHTML[activeStatsFilter]}
+                </div>`;
+        }
+
+        // دالة حفظ سبب المرتجع (تعديل السبب بعد التسجيل)
+        function saveReturnReason(orderId) {
+            let inputEl = document.getElementById(`return-input-${orderId}`);
+            let inputVal = inputEl ? inputEl.value.trim() : "";
+            if(inputVal === "") { alert("برجاء كتابة سبب المرتجع أو نتيجة رسالة الواتساب أولاً!"); return; }
+            let order = databaseOrders.find(o => o.id === orderId);
+            if(order) {
+                order.returnReason = inputVal;
+                refreshUI();
+                alert("تم تسجيل وتحديث سبب المرتجع للفاتورة بنجاح ✅");
+            }
+        }
+
+        function refreshUI() {
+            runSystemAutomation();
+            
+            document.getElementById('count-2').innerText = databaseOrders.filter(o => o.step === 2).length;
+            document.getElementById('count-light').innerText = databaseOrders.filter(o => o.step === 3).length;
+            document.getElementById('count-heavy').innerText = databaseOrders.filter(o => o.step === 4).length;
+
+            if (currentViewStage === 3) {
+                document.getElementById('crm-sidebar-group').style.display = "none";
+                document.getElementById('bosta-sidebar-group').style.display = "block";
+            } else {
+                document.getElementById('crm-sidebar-group').style.display = "block";
+                document.getElementById('bosta-sidebar-group').style.display = "none";
+            }
+
+            const tableWrapper = document.getElementById('table-wrapper');
+            let filtered = databaseOrders.filter(o => o.step === currentViewStage);
+
+            if (currentViewStage === 3) {
+                document.getElementById('stage-title').innerText = "صفحة شحن أوردرات بوسطة (الشحن الخفيف الآلي)";
+
+                // الجدول الرئيسي يعرض فقط الفواتير التي لسه لم تُرسل للشحن (Confirmed)
+                // أما المرسلة/المسلمة/المرتجعة فتظهر عند الضغط على مؤشرات الأداء بالشريط الجانبي
+                filtered = filtered.filter(o => o.status === 'Confirmed');
+
+                let tableHtml = `
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Order ID</th>
+                                <th>البوليصة</th>
+                                <th>price</th>
+                                <th>comment</th>
+                                <th>Name</th>
+                                <th>الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                if (filtered.length === 0) {
+                    tableHtml += `<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8; font-weight:bold;">لا توجد طلبات بانتظار الإرسال حالياً.</td></tr>`;
+                } else {
+                    filtered.forEach(order => {
+                        let formattedDate = order.timestamp.toISOString().split('T')[0].replace(/-/g, '/');
+
+                        tableHtml += `
+                            <tr>
+                                <td style="color:#64748b;">${formattedDate}</td>
+                                <td><b>#${order.id}</b></td>
+                                <td style="color:#94a3b8; font-size:12px;">لم يُسجل بعد</td>
+                                <td style="font-weight:bold; color:var(--primary);">${order.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                <td>
+                                    <div style="display:flex; gap:4px;">
+                                        <input type="text" id="comment-input-${order.id}" class="form-control" style="padding:6px; font-size:12px;" value="${(order.comment || '').replace(/"/g, '&quot;')}" placeholder="اكتب ملاحظة...">
+                                        <button class="btn btn-secondary" style="padding:6px 8px; font-size:11px;" onclick="saveComment(${order.id})">حفظ</button>
+                                    </div>
+                                </td>
+                                <td><b>${order.customer}</b></td>
+                                <td><button class="btn btn-info" style="padding:8px 12px; font-size:12px;" onclick="markSentToShipping(${order.id})">✅ تم الارسال للشحن</button></td>
+                            </tr>`;
+                    });
+                }
+                tableHtml += `</tbody></table>`;
+                tableWrapper.innerHTML = tableHtml;
+
+            } else {
+                // Other stages (unchanged)
+                document.getElementById('stage-title').innerText = currentViewStage === 2 ? "بوابة خدمة العملاء: مكالمات الفرز والتحقق والتأكيد الصارم الموحد" : "صفحة حركة سيارات الشركة (الشحن الثقيل والمخلوط)";
+                
+                let tableHtml = `
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>العميل والمدينة</th>
+                                <th>المنتجات المطلوبة</th>
+                                <th>نوع الشحن التلقائي</th>
+                                <th>المخزون</th>
+                                <th>الإجراء والتحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                if (filtered.length === 0) {
+                    tableHtml += `<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8; font-weight:bold;">لا توجد طلبات في هذه المرحلة حالياً.</td></tr>`;
+                } else {
+                    filtered.sort((a, b) => (b.isStale ? 1 : 0) - (a.isStale ? 1 : 0));
+                    filtered.forEach(order => {
+                        let rowClass = order.isStale ? "stale-order-row" : "";
+                        let actionBtnHtml = order.step === 2 ? `<button class="action-btn" onclick="openGateModal(${order.id})">فتح الطلب والمكالمة 📞</button>` : `<span style="color:var(--success); font-weight:bold;">🔒 موجه للوجستيات (${order.comment})</span>`;
+                        
+                        tableHtml += `
+                            <tr class="${rowClass}">
+                                <td><b>#${order.id}</b></td>
+                                <td><b>${order.customer}</b><br><small style="color:#64748b;">المدينة: ${order.city}</small></td>
+                                <td style="font-size:13px;">${order.items}</td>
+                                <td><span class="type-badge ${order.shippingClass}">${order.shippingPath}</span></td>
+                                <td><span class="inv-badge ${order.inventoryClass}">${order.inventoryStatus}</span></td>
+                                <td>${actionBtnHtml}</td>
+                            </tr>`;
+                    });
+                }
+                tableHtml += `</tbody></table>`;
+                tableWrapper.innerHTML = tableHtml;
+            }
+        }
+
+        function saveComment(orderId) {
+            let inputEl = document.getElementById(`comment-input-${orderId}`);
+            if (!inputEl) return;
+            let order = databaseOrders.find(o => o.id === orderId);
+            if (order) {
+                order.comment = inputEl.value.trim();
+                refreshUI();
+            }
+        }
+
+        function markSentToShipping(orderId) {
+            let order = databaseOrders.find(o => o.id === orderId);
+            if (order) {
+                const waybillNum = `BSTA-${order.id}-${Math.floor(Math.random()*1000)}`;
+                order.waybill = waybillNum;
+                order.status = "Sent to Shipping";
+                order.sentAt = new Date();
+                refreshUI();
+            }
+        }
+
+        function markDelivered(orderId) {
+            let order = databaseOrders.find(o => o.id === orderId);
+            if (order) {
+                order.status = "Delivered";
+                order.deliveredAt = new Date();
+                refreshUI();
+            }
+        }
+
+        function markReturned(orderId) {
+            let order = databaseOrders.find(o => o.id === orderId);
+            if (!order) return;
+            let reason = window.prompt("يرجى كتابة سبب الإرجاع لإغلاق الفاتورة كمرتجع بالكامل:", "");
+            if (reason === null) return; // العملية اتلغت
+            reason = reason.trim();
+            if (reason === "") { alert("لا يمكن تسجيل الفاتورة كمرتجع بدون كتابة سبب الاسترجاع."); return; }
+            order.status = "Returned";
+            order.returnReason = reason;
+            order.returnedAt = new Date();
+            refreshUI();
+        }
+
+        function switchStage(stageNum) { 
+            currentViewStage = stageNum; 
+            activeStatsFilter = null; // Reset drill-down when switching
+            document.querySelectorAll('.stage-tab').forEach((t, i) => t.classList.toggle('active', i+2===stageNum)); 
+            refreshUI(); 
+        }
+
+        // Keep existing modal functions (openGateModal, etc.) unchanged
+        function openGateModal(id) {
+            activeOrderId = id;
+            isCancelMode = false;
+            let order = databaseOrders.find(o => o.id === id);
+
+            document.getElementById('customerAddress').value = order.address;
+            document.getElementById('orderTotalPriceInput').value = order.price;
+            document.getElementById('employeePledge').checked = false;
+            document.getElementById('selectedSolution').value = "";
+            document.getElementById('factorySpecs').value = "";
+            document.getElementById('factoryDate').value = "";
+            document.getElementById('cancelReason').value = "";
+            
+            document.getElementById('cancelReasonBox').style.display = "none";
+            document.getElementById('cancelTriggerBtn').style.display = "inline-block";
+            document.getElementById('noReplyTriggerBtn').style.display = "inline-block";
+            document.getElementById('waitingDepositTriggerBtn').style.display = "inline-block";
+            document.getElementById('waitingReplyTriggerBtn').style.display = "inline-block";
+            document.getElementById('addressInputBox').style.display = "block";
+            document.getElementById('priceInputBox').style.display = "block";
+            document.getElementById('gateBox').style.display = "block";
+            document.getElementById('factoryGatesBox').style.display = "none";
+            document.getElementById('shortageSolutionsBox').style.display = "block";
+            document.getElementById('modalHeaderTitle').innerText = "⚠️ بوابة معالجة وتوجيه طلبات المشرقي (صارم)";
+
+            document.getElementById('modalOrderSummary').innerHTML = `
+                <b>رقم الفاتورة:</b> #${order.id} | <b>الهاتف:</b> ${order.phone} <br>
+                <b>العميل:</b> ${order.customer} | <b>المدينة:</b> ${order.city} <br>
+                <b>الأصناف الحالية:</b> ${order.items}
+            `;
+
+            validateGateForm();
+            document.getElementById('gateModal').style.display = 'flex';
+        }
+
+        function handleSolutionChange() {
+            let sol = document.getElementById('selectedSolution').value;
+            if (sol === "factory_order") {
+                document.getElementById('factoryGatesBox').style.display = "block";
+            } else {
+                document.getElementById('factoryGatesBox').style.display = "none";
+            }
+            validateGateForm();
+        }
+
+        function validateGateForm() {
+            let address = document.getElementById('customerAddress').value.trim();
+            let pledgeChecked = document.getElementById('employeePledge').checked;
+            let submitBtn = document.getElementById('submitGateBtn');
+
+            if (isCancelMode) {
+                let reason = document.getElementById('cancelReason').value.trim();
+                submitBtn.disabled = (reason === "");
+                return;
+            }
+
+            if (address === "") { submitBtn.disabled = true; return; }
+
+            let sol = document.getElementById('selectedSolution').value;
+            if (sol === "") { submitBtn.disabled = true; return; }
+            
+            if (sol === "factory_order") {
+                let specs = document.getElementById('factorySpecs').value.trim();
+                let fDate = document.getElementById('factoryDate').value.trim();
+                if (specs === "" || fDate === "") { submitBtn.disabled = true; return; }
+            }
+
+            submitBtn.disabled = !pledgeChecked;
+        }
+
+        function executeGateAction() {
+            let order = databaseOrders.find(o => o.id === activeOrderId);
+            order.address = document.getElementById('customerAddress').value.trim();
+            order.price = parseFloat(document.getElementById('orderTotalPriceInput').value) || 0;
+            order.timestamp = new Date();
+
+            if (isCancelMode) {
+                let reason = document.getElementById('cancelReason').value.trim();
+                order.step = -1; 
+                let cancelList = document.getElementById('cancelled-orders-list');
+                if (cancelList.innerText.includes("لا توجد")) cancelList.innerHTML = "";
+                cancelList.innerHTML += `<div class="factory-list-item" style="border-right: 4px solid var(--danger);"><b>فاتورة #${order.id}</b><br>السبب: ${reason}</div>`;
+                closeModal(); refreshUI(); return;
+            }
+
+            let sol = document.getElementById('selectedSolution').value;
+
+            if (sol === "factory_order") {
+                let specs = document.getElementById('factorySpecs').value.trim();
+                let fDate = document.getElementById('factoryDate').value.trim();
+                order.step = 5; 
+                
+                let facList = document.getElementById('factory-orders-list');
+                if (facList.innerText.includes("لا توجد")) facList.innerHTML = "";
+                facList.innerHTML += `
+                    <div class="factory-list-item" style="border-right: 4px solid var(--success);">
+                        <b>فاتورة #${order.id} - ${order.customer}</b><br>
+                        ⚙️ الفنيات: ${specs} | جاهزية: ${fDate}
+                    </div>`;
+            } else {
+                if (order.weight < 20) { 
+                    order.step = 3; 
+                    order.status = "Confirmed"; 
+                } else { 
+                    order.step = 4; 
+                }
+                order.comment = sol === "forced_ok" ? "تأكيد فوري مطابق" : "بديل جاهز ومعدل بموافقة العميل";
+            }
+
+            closeModal();
+            refreshUI();
+        }
+
+        function executeWaitingReply() {
+            let order = databaseOrders.find(o => o.id === activeOrderId); order.step = 8; order.timestamp = new Date();
+            let replyList = document.getElementById('waiting-reply-orders-list');
+            if (replyList.innerText.includes("لا توجد")) replyList.innerHTML = "";
+            replyList.innerHTML += `<div class="factory-list-item" style="border-right: 4px solid var(--info);"><b>فاتورة #${order.id} - ${order.customer}</b><br>مهلة معلقة 24 ساعة</div>`;
+            closeModal(); refreshUI();
+        }
+
+        function executeNoReply() {
+            let order = databaseOrders.find(o => o.id === activeOrderId); order.step = 6; order.timestamp = new Date();
+            let noReplyList = document.getElementById('noreply-orders-list');
+            if (noReplyList.innerText.includes("لا توجد")) noReplyList.innerHTML = "";
+            noReplyList.innerHTML += `<div class="factory-list-item" style="border-right: 4px solid var(--warning);"><b>فاتورة #${order.id} - ${order.customer}</b><br>📞 لم يرد - تم إرسال واتساب آلي</div>`;
+            closeModal(); refreshUI();
+        }
+
+        function executeWaitingDeposit() {
+            let order = databaseOrders.find(o => o.id === activeOrderId); order.step = 7; order.timestamp = new Date();
+            let depositList = document.getElementById('waiting-deposit-orders-list');
+            if (depositList.innerText.includes("لا توجد")) depositList.innerHTML = "";
+            depositList.innerHTML += `<div class="factory-list-item" style="border-right: 4px solid var(--purple);"><b>فاتورة #${order.id} - ${order.customer}</b><br>💳 في انتظار جدية التعاقد</div>`;
+            closeModal(); refreshUI();
+        }
+
+        function setupCancelMode() {
+            isCancelMode = true;
+            document.getElementById('shortageSolutionsBox').style.display = "none";
+            document.getElementById('factoryGatesBox').style.display = "none";
+            document.getElementById('gateBox').style.display = "none";
+            document.getElementById('cancelTriggerBtn').style.display = "none";
+            document.getElementById('noReplyTriggerBtn').style.display = "none";
+            document.getElementById('waitingDepositTriggerBtn').style.display = "none";
+            document.getElementById('waitingReplyTriggerBtn').style.display = "none";
+            document.getElementById('addressInputBox').style.display = "none";
+            document.getElementById('priceInputBox').style.display = "none";
+            document.getElementById('cancelReasonBox').style.display = "block";
+            document.getElementById('modalHeaderTitle').innerText = "🚫 إلغاء الطلب بالكامل وحذفه لوجستياً";
+            validateGateForm();
+        }
+
+        function closeModal() { document.getElementById('gateModal').style.display = 'none'; }
+        
+        // Event listeners
+        document.getElementById('customerAddress').addEventListener('input', validateGateForm);
+        document.getElementById('factorySpecs').addEventListener('input', validateGateForm);
+        document.getElementById('factoryDate').addEventListener('input', validateGateForm);
+        document.getElementById('cancelReason').addEventListener('input', validateGateForm);
+
+        // Initial load
+        refreshUI();
+    </script>
+</body>
+</html>
