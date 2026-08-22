@@ -278,7 +278,6 @@
     pointer-events:none;
   }
   
-  /* خلفية شاشة الواجهة باستخدام الصورة الجديدة */
   #coverScreen .cover-bg {
     position: absolute;
     inset: 0;
@@ -316,7 +315,7 @@
     color: var(--gold-light);
     font-size: 15px;
     letter-spacing: 2px;
-    margin-bottom: 220px; /* لرفع النص ليناسب الفراغ في الصورة */
+    margin-bottom: 220px;
   }
   
   #coverScreen .cover-names-box {
@@ -446,7 +445,7 @@
 
 <!-- شاشة الواجهة الأولى -->
 <div id="coverScreen">
-  <img src="Gemini_Generated_Image_j24c62j24c62j24c.jpeg" alt="واجهة الدعوة" class="cover-bg">
+  <img src="Gemini_Generated_Image_j24c62j24c62j24c.jpeg" alt="photo1" class="cover-bg">
   <div class="cover-overlay"></div>
   
   <div class="cover-content">
@@ -456,7 +455,7 @@
     </div>
     <button class="open-btn" id="openBtn" type="button">
       <span class="ring"></span>
-      افتحوا الدعوة
+      افتح الدعوة
     </button>
   </div>
 </div>
@@ -506,19 +505,19 @@
     </div>
 
     <a class="cta" href="https://maps.app.goo.gl/bNy5sfxUNrCXYStA8" target="_blank" rel="noopener">
-      افتح الموقع على الخريطة <span class="icon">↝</span>
+      location <span class="icon">↝</span>
     </a>
 
     <div class="music-row">
       <button class="music-btn" id="musicBtn" type="button">
         <span class="dot"></span>
-        <span id="musicLabel">تشغيل موسيقى الحفل</span>
+        <span id="musicLabel"> موسيقى </span>
       </button>
     </div>
     <div id="ytPlayer" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;"></div>
 
     <div class="msg-section">
-      <p class="msg-title">اكتبوا رسالة للعروسين</p>
+      <p class="msg-title">اكتب رسالة للعروسين</p>
       <form id="msgForm">
         <input type="text" id="msgName" placeholder="اسمك" required>
         <textarea id="msgText" placeholder="اكتب رسالتك هنا..." required></textarea>
@@ -557,11 +556,11 @@
       label.textContent = 'إيقاف الموسيقى';
     } else {
       btn.classList.remove('playing');
-      label.textContent = 'تشغيل موسيقى الحفل';
+      label.textContent = 'تشغيل موسيقي ';
     }
   }
 
-  window.onYouTubeIframeAPIReady = function () {
+  window.onYouTubeIframeady = function () {
     player = new YT.Player('ytPlayer', {
       height: '1',
       width: '1',
@@ -662,4 +661,4 @@
 </script>
 
 </body>
-</html>
+  </html>
