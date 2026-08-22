@@ -65,7 +65,7 @@
     to{ opacity:1; transform: translateY(0) scale(1); }
   }
 
-  /* ---- hero: uploaded photo, with names set into its blank archway ---- */
+  /* ---- hero: photo, with names set into its blank archway ---- */
   .hero{
     position:relative;
     width:100%;
@@ -434,10 +434,11 @@
   .msg-btn:disabled{ opacity:0.6; cursor:default; transform:none; }
   .msg-status{
     text-align:center;
-    font-size:13px;
+    font-size:13.5px;
     margin-top:10px;
     min-height:16px;
     color:var(--maroon-mid);
+    font-weight:600;
   }
 </style>
 </head>
@@ -445,7 +446,7 @@
 
 <!-- شاشة الواجهة الأولى -->
 <div id="coverScreen">
-  <img src="Gemini_Generated_Image_j24c62j24c62j24c.jpeg" alt="photo1" class="cover-bg">
+  <img src="Gemini_Generated_Image_j24c62j24c62j24c.jpeg" alt="صورة الغلاف" class="cover-bg">
   <div class="cover-overlay"></div>
   
   <div class="cover-content">
@@ -514,7 +515,12 @@
         <span id="musicLabel"> موسيقى </span>
       </button>
     </div>
-    <div id="ytPlayer" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;"></div>
+    
+    <!-- عنصر الصوت المباشر من موقع Archive.org -->
+    <audio id="bgMusic" loop>
+      <!-- ضع رابط ملف الصوت المباشر هنا (.mp3) بدلاً من النص بين العلامتين -->
+      <source src="ضع_رابط_الأغنية_المباشر_هنا.mp3" type="audio/mpeg">
+    </audio>
 
     <div class="msg-section">
       <p class="msg-title">اكتب رسالة للعروسين</p>
@@ -534,21 +540,12 @@
 </div>
 
 <script>
-  const YT_VIDEO_ID = 'V5QcOr5nnw4';
-
   const btn = document.getElementById('musicBtn');
   const label = document.getElementById('musicLabel');
   const coverScreen = document.getElementById('coverScreen');
   const inviteScreen = document.getElementById('inviteScreen');
   const openBtn = document.getElementById('openBtn');
-
-  let player;
-  let isReady = false;
-  let pendingPlay = false;
-
-  const tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.body.appendChild(tag);
+  const audioPlayer = document.getElementById('bgMusic');
 
   function setPlayingUI(playing){
     if (playing) {
@@ -556,69 +553,37 @@
       label.textContent = 'إيقاف الموسيقى';
     } else {
       btn.classList.remove('playing');
-      label.textContent = 'تشغيل موسيقي ';
+      label.textContent = 'تشغيل موسيقي';
     }
   }
-
-  window.onYouTubeIframeady = function () {
-    player = new YT.Player('ytPlayer', {
-      height: '1',
-      width: '1',
-      videoId: YT_VIDEO_ID,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        playsinline: 1,
-        loop: 1,
-        playlist: YT_VIDEO_ID
-      },
-      events: {
-        onReady: function () {
-          isReady = true;
-          if (pendingPlay) { player.playVideo(); }
-        },
-        onStateChange: function (e) {
-          if (e.data === YT.PlayerState.PLAYING) setPlayingUI(true);
-          else if (e.data === YT.PlayerState.PAUSED) setPlayingUI(false);
-        },
-        onError: function (e) {
-          const reasons = {
-            2: 'رابط الأغنية غلط',
-            5: 'في مشكلة تقنية في تشغيل الفيديو',
-            100: 'الفيديو ده مش موجود أو خاص',
-            101: 'صاحب الفيديو مانع تشغيله في مواقع تانية',
-            150: 'صاحب الفيديو مانع تشغيله في مواقع تانية'
-          };
-          label.textContent = reasons[e.data] || 'مش قادر أشغل الأغنية دي';
-        }
-      }
-    });
-  };
 
   // فتح الدعوة وبدء تشغيل الموسيقى
   openBtn.addEventListener('click', () => {
     coverScreen.classList.add('hidden');
     inviteScreen.classList.add('visible');
-    if (isReady) {
-      player.playVideo();
-    } else {
-      pendingPlay = true;
-    }
+    
+    audioPlayer.play().then(() => {
+      setPlayingUI(true);
+    }).catch((err) => {
+      console.log("Autoplay prevented:", err);
+      setPlayingUI(false);
+    });
   });
 
   // التحكم في الموسيقى من الزر السفلي
   btn.addEventListener('click', () => {
-    if (!isReady) {
-      label.textContent = 'جاري التحميل…';
-      return;
-    }
-    const state = player.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-      player.pauseVideo();
+    if (audioPlayer.paused) {
+      audioPlayer.play().then(() => {
+        setPlayingUI(true);
+      });
     } else {
-      player.playVideo();
+      audioPlayer.pause();
+      setPlayingUI(false);
     }
   });
+
+  audioPlayer.addEventListener('play', () => setPlayingUI(true));
+  audioPlayer.addEventListener('pause', () => setPlayingUI(false));
 
   // ---- guest message form ----
   const MSG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyzBRa5gR77rBHiqK99d1-IddxYiQuI0dXXB-MnBqqkTDU9hofSSGtPaN-SqlneHIbsDw/exec';
@@ -661,4 +626,4 @@
 </script>
 
 </body>
-  </html>
+</html>
