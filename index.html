@@ -247,29 +247,6 @@
     50%{ opacity:0.4; transform:scale(1.4); }
   }
 
-  .sound-hint{
-    position:fixed;
-    left:50%;
-    bottom:18px;
-    transform: translateX(-50%);
-    background: var(--maroon-deep);
-    color: var(--cream);
-    font-family:'Cairo', sans-serif;
-    font-size:13px;
-    padding:10px 18px;
-    border-radius:999px;
-    box-shadow:0 10px 24px rgba(0,0,0,0.35);
-    opacity:0;
-    pointer-events:none;
-    transition: opacity .3s ease;
-    z-index:20;
-    white-space:nowrap;
-  }
-  .sound-hint.show{
-    opacity:1;
-    pointer-events:auto;
-  }
-
   .footer-note{
     text-align:center;
     margin-top:22px;
@@ -291,67 +268,110 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:22px;
-    background: radial-gradient(circle at 50% 20%, #4a0e17 0%, var(--maroon-deep) 55%, #1c0306 100%);
     z-index:30;
     transition: opacity .7s ease, visibility .7s ease;
-    padding:24px;
-    text-align:center;
+    overflow: hidden;
   }
   #coverScreen.hidden{
     opacity:0;
     visibility:hidden;
     pointer-events:none;
   }
+  
+  /* خلفية شاشة الواجهة باستخدام الصورة الجديدة */
+  #coverScreen .cover-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    z-index: 1;
+  }
+  
+  #coverScreen .cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(58,6,13,0.4), rgba(28,3,6,0.85));
+    z-index: 2;
+  }
+
+  #coverScreen .cover-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    text-align: center;
+    width: 100%;
+    max-width: 460px;
+    height: 100%;
+  }
+
   #coverScreen .eyebrow{
     font-family:'Reem Kufi', sans-serif;
     color: var(--gold-light);
-    font-size:13px;
-    letter-spacing:2px;
-    opacity:0.85;
+    font-size: 15px;
+    letter-spacing: 2px;
+    margin-bottom: 220px; /* لرفع النص ليناسب الفراغ في الصورة */
   }
+  
+  #coverScreen .cover-names-box {
+    position: absolute;
+    top: 38%;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+
   #coverScreen .cover-names{
     font-family:'Aref Ruqaa', serif;
-    color: var(--cream);
-    font-size:clamp(30px, 9vw, 44px);
-    line-height:1.3;
+    color: var(--maroon-deep);
+    font-size: clamp(32px, 9vw, 44px);
+    line-height: 1.2;
+    font-weight: 700;
   }
   #coverScreen .cover-names .amp{
-    color: var(--gold-light);
-    font-size:0.5em;
-    display:block;
-    margin:2px 0;
+    color: var(--gold-dark);
+    font-size: 19px;
+    display: block;
+    margin: 4px 0;
   }
+
   .open-btn{
-    position:relative;
+    position: absolute;
+    bottom: 60px;
     display:inline-flex;
     align-items:center;
     gap:10px;
-    background: transparent;
-    border:1px solid var(--gold-light);
-    color: var(--cream);
+    background: var(--cream);
+    border:1px solid var(--gold);
+    color: var(--maroon-deep);
     font-family:'Cairo', sans-serif;
-    font-weight:600;
-    font-size:15px;
+    font-weight:700;
+    font-size:16px;
     letter-spacing:0.4px;
-    padding:15px 34px;
+    padding:14px 36px;
     border-radius:999px;
     cursor:pointer;
-    margin-top:10px;
-    overflow:hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     transition: background .3s ease, transform .3s ease, box-shadow .3s ease;
+    z-index: 3;
   }
   .open-btn:hover{
-    background: rgba(224,192,138,0.12);
+    background: var(--gold-light);
     transform: translateY(-2px);
-    box-shadow: 0 10px 26px rgba(184,137,79,0.35);
+    box-shadow: 0 14px 32px rgba(184,137,79,0.5);
   }
   .open-btn:active{ transform: translateY(0); }
   .open-btn:focus-visible{ outline:2px solid var(--gold-light); outline-offset:4px; }
   .open-btn .ring{
-    width:6px;height:6px;
+    width:7px;height:7px;
     border-radius:50%;
-    background: var(--gold-light);
+    background: var(--maroon-mid);
     animation: pulse 1.8s ease-in-out infinite;
   }
 
@@ -424,15 +444,24 @@
 </head>
 <body>
 
+<!-- شاشة الواجهة الأولى -->
 <div id="coverScreen">
-  <p class="eyebrow">دعوة زفاف</p>
-  <p class="cover-names">يُوسُف<span class="amp">و</span>أَسْمَاء</p>
-  <button class="open-btn" id="openBtn" type="button">
-    <span class="ring"></span>
-    افتحوا الدعوة
-  </button>
+  <img src="Gemini_Generated_Image_j24c62j24c62j24c.jpeg" alt="واجهة الدعوة" class="cover-bg">
+  <div class="cover-overlay"></div>
+  
+  <div class="cover-content">
+    <p class="eyebrow">دعوة زفاف مباركة</p>
+    <div class="cover-names-box">
+      <h1 class="cover-names">يُوسُف<span class="amp">و</span>أَسْمَاء</h1>
+    </div>
+    <button class="open-btn" id="openBtn" type="button">
+      <span class="ring"></span>
+      افتحوا الدعوة
+    </button>
+  </div>
 </div>
 
+<!-- صفحة الدعوة الرئيسية -->
 <div id="inviteScreen">
 
 <div class="mote" style="width:120px;height:120px; top:8%; left:6%;"></div>
@@ -442,7 +471,7 @@
 <div class="card">
 
   <div class="hero">
-    <img src="photo.jpg" alt="">
+    <img src="Gemini_Generated_Image_j24c62j24c62j24c.jpeg" alt="صورة العروسين">
     <p class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
     <div class="names">
       <span class="name">يُوسُف</span>
@@ -505,14 +534,11 @@
 </div>
 </div>
 
-<div class="sound-hint" id="soundHint">🔇 دوس في أي حتة في الصفحة عشان الصوت يشتغل</div>
-
 <script>
   const YT_VIDEO_ID = 'V5QcOr5nnw4';
 
   const btn = document.getElementById('musicBtn');
   const label = document.getElementById('musicLabel');
-  const hint = document.getElementById('soundHint');
   const coverScreen = document.getElementById('coverScreen');
   const inviteScreen = document.getElementById('inviteScreen');
   const openBtn = document.getElementById('openBtn');
@@ -570,7 +596,7 @@
     });
   };
 
-  // opening the invitation is a real tap, so the browser allows sound here
+  // فتح الدعوة وبدء تشغيل الموسيقى
   openBtn.addEventListener('click', () => {
     coverScreen.classList.add('hidden');
     inviteScreen.classList.add('visible');
@@ -581,6 +607,7 @@
     }
   });
 
+  // التحكم في الموسيقى من الزر السفلي
   btn.addEventListener('click', () => {
     if (!isReady) {
       label.textContent = 'جاري التحميل…';
@@ -616,8 +643,6 @@
 
     fetch(MSG_ENDPOINT, {
       method: 'POST',
-      // no-cors: Apps Script web apps don't return CORS headers,
-      // so we fire the request and just assume success if it doesn't throw.
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ name: name, message: message })
